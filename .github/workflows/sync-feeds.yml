@@ -1,0 +1,22 @@
+# Feed readers don't follow JavaScript redirects, so keep copies of the feeds here.
+name: Sync feeds
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p posts
+          curl -fsSL https://www.lobocv.com/index.xml -o index.xml
+          curl -fsSL https://www.lobocv.com/posts/index.xml -o posts/index.xml
+      - run: |
+          git add index.xml posts/index.xml
+          git diff --cached --quiet && exit 0
+          git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -m "Sync feeds"
+          git push
